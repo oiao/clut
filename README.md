@@ -16,7 +16,7 @@ If you can live with applying the CLUT filter through a C backend, there are
 
 ## Example usage
 
-```
+``` python
 from clut import CLUT
 # Initialize either with the number of levels, translates to 3D grid of i**2 points
 clut = CLUT(3)
