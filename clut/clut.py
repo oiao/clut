@@ -57,12 +57,8 @@ class CLUT:
         if isinstance(i, int):
             assert 2 <= i <= 16, "Size must be between 2 and 16"
             self.size = i
-            s2 = i**2
-            b,g,r = np.mgrid[
-                0 : 255 : s2*1j,
-                0 : 255 : s2*1j,
-                0 : 255 : s2*1j
-                ].astype(np.uint8)
+            points = np.linspace(0, 255, i**2)
+            b,g,r = np.meshgrid(*3*[points], indexing='ij').astype(np.uint8)
             self.clut = np.stack([r,g,b]).T
 
         elif isinstance(i, str):
@@ -125,15 +121,5 @@ class CLUT:
         return table
 
 
-s = 5
-b1,g1,r1 = np.mgrid[
-    0 : 255 : s**2*1j,
-    0 : 255 : s**2*1j,
-    0 : 255 : s**2*1j
-    ]
-
-
-r = np.linspace(0, 255, s**2)
-b2,g2,r2 = np.meshgrid(*3*[r], indexing='ij')
-
-(g2==g1).all()
+a = CLUT(4)
+a[-1,-1,-1]
