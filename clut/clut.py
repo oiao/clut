@@ -1,30 +1,6 @@
 import numpy as np
 from PIL import Image
 
-IM0 = 'IMG_3364.jpg'
-IMM = 'IMG_3364_clut.png'
-
-im0 = Image.open(IM0)
-imm = Image.open(IMM)
-
-I = identity_table(6)
-
-assert im0.size == imm.size, "Original and target Image sizes must be identical"
-
-def random_pixels(image, points=(10,10), seed=None):
-    image = np.array(image)
-    np.random.seed(seed)
-    ret = []
-    x   = np.random.choice(np.arange(image.shape[0]), replace=False, size=points[0])
-    for xi in x:
-        y = np.random.choice(np.arange(image.shape[1]), replace=False, size=points[1])
-        for yi in y:
-            ret.append([xi, yi])
-    ret = np.array(ret)
-    return ret[:,0], ret[:,1]
-
-
-
 class CLUT:
     """
     3D ColorLookUpTable Class
@@ -119,7 +95,3 @@ class CLUT:
         table = np.array(im).reshape((cubesize,cubesize,cubesize,3)).astype(np.uint8)
         table = np.swapaxes(table, 0, 2) # When saved, red and blue channels are swapped
         return table
-
-
-a = CLUT(4)
-a[-1,-1,-1]
