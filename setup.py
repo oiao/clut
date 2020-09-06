@@ -14,7 +14,6 @@ setup(
     author           = 'Leo Komissarov',
     url              = f'https://github.com/oiao/{NAME}',
     download_url     = f'https://github.com/oiao/{NAME}/archive/master.zip',
-    license          = 'GPLv3+',
     description      = DESCR,
     classifiers      = [
             'Development Status :: 3 - Alpha',
