@@ -1,6 +1,9 @@
 import numpy as np
 from PIL import Image
 
+
+__all__ = ['CLUT']
+
 class CLUT:
     """
     3D ColorLookUpTable Class
