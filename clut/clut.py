@@ -1,7 +1,6 @@
 import numpy as np
 from PIL import Image
 
-
 __all__ = ['CLUT']
 
 class CLUT:
@@ -37,8 +36,8 @@ class CLUT:
             assert 2 <= i <= 16, "Size must be between 2 and 16"
             self.size = i
             points = np.linspace(0, 255, i**2)
-            b,g,r = np.meshgrid(*3*[points], indexing='ij').astype(np.uint8)
-            self.clut = np.stack([r,g,b]).T
+            b,g,r = np.meshgrid(*3*[points], indexing='ij')
+            self.clut = np.stack([r,g,b]).T.astype(np.uint8)
 
         elif isinstance(i, str):
             self.clut = self.load(i)
@@ -46,8 +45,9 @@ class CLUT:
 
         elif isinstance(i, np.ndarray):
             assert i.ndim == 4, "Table must be 4-dimensional"
-            assert [i.shape[0]  == i.shape[i] for i in range(2)], "Table is not square"
+            assert [i.shape[0]  == i.shape[j] for j in range(2)], "Table is not square"
             assert i.shape[-1]  == 3, "Last axis must contain three elements (r,g,b)"
+            assert i.shape[0]   >= 4, "Matrix has to consist of at least 3 points in each dimension"
             assert 0 <= i.min() <= 255, "RGB Values must be in the range of [0, 255]"
             assert 0 <= i.max() <= 255, "RGB Values must be in the range of [0, 255]"
             self.size = int(np.sqrt(i.shape[0]))
