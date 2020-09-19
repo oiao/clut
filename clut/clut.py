@@ -58,7 +58,7 @@ class CLUT:
             clut   = np.stack([r,g,b]).T
 
         elif isinstance(i, str):
-            clut = self.load(i)
+            clut = self.load(i, self._colors)
 
         elif isinstance(i, np.ndarray):
             assert i.ndim == 4, "Table must be 4-dimensional"
@@ -140,19 +140,19 @@ class CLUT:
 
 
     @staticmethod
-    def load(fpath):
+    def load(fpath, colors=256):
         """
         Loads a HaldCLUT from `fpath`, returns the associated 3D CLUT
         """
         im = Image.open(fpath)
         assert im.size[0] == im.size[1], "Image must be square."
 
-        for i in range(2, int(np.sqrt(self._colors))):
+        for i in range(2, int(np.sqrt(colors))):
             if i**3 == im.size[0]:
                 cubesize = i**2
                 break
         else:
-            raise ValueError(f"Could not determine CLUT size. Should be between 8 and {int(np.sqrt(self._colors)} px")
+            raise ValueError(f"Could not determine CLUT size. Should be between 8 and {int(np.sqrt(colors))} px")
 
         clut = np.array(im).reshape((cubesize,cubesize,cubesize,3))
         clut = np.swapaxes(clut, 0, 2) # When saved, red and blue channels are swapped

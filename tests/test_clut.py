@@ -8,7 +8,7 @@ from clut import CLUT
 class TestCLUT(unittest.TestCase):
     def test_init(self):
         clut = CLUT()
-        self.AssertEqual(clut._dtype, np.uint8)
+        self.assertEqual(clut._dtype, np.uint8)
 
         points = np.linspace(0, 255, 4**2)
         b,g,r = np.meshgrid(*3*[points], indexing='ij')
@@ -21,7 +21,7 @@ class TestCLUT(unittest.TestCase):
         clut1.save('testclut.png')
         clut2 = CLUT('testclut.png')
         relerr = np.abs(clut1.clut - clut2.clut).max() # account for interpolation and compression errors
-        self.LessEqual(relerr, 1)
+        self.assertLessEqual(relerr, 1)
         os.remove('testclut.png')
 
 
