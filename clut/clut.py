@@ -89,11 +89,12 @@ class CLUT:
         assert 0 <= image.min() <= self._colors-1, f"Image appears to be of a different color depth than this CLUT instance (which is {self._depth})."
         assert 0 <= image.max() <= self._colors-1, f"Image appears to be of a different color depth than this CLUT instance (which is {self._depth})."
 
-        image = image.reshape((image.shape[0]*image.shape[1], 3))
+        shape  = image.shape
+        im     = np.array(image).reshape(-1,3)
+        r,g,b  = im[:,0], im[:,1], im[:,2]
+        im_out = self.clut[r,g,b].reshape(shape)
 
-        ...
-
-        return
+        return im_out
 
 
     def flat(self, size=None, swapaxes=False):

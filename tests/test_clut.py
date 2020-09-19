@@ -3,6 +3,7 @@ import os
 from os.path import join as opj
 import numpy as np
 from clut import CLUT
+from PIL import Image
 
 
 class TestCLUT(unittest.TestCase):
@@ -23,6 +24,24 @@ class TestCLUT(unittest.TestCase):
         relerr = np.abs(clut1.clut - clut2.clut).max() # account for interpolation and compression errors
         self.assertLessEqual(relerr, 1)
         os.remove('testclut.png')
+
+
+    def test_call(self):
+        clut = CLUT()
+
+        with self.assertRaises(ValueError):
+            clut(10) # wrong argument type
+        with self.assertRaises(AssertionError):
+            clut(np.empty(shape=(2,2))) # wrong shape
+        with self.assertRaises(AssertionError):
+            clut(np.empty(shape=(2,2,2))) # wrong number of colors
+        with self.assertRaises(AssertionError):
+            clut(300*np.ones(shape=(3,3,3))) # wrong number bit depth
+        with self.assertRaises(AssertionError):
+            clut(-300*np.ones(shape=(3,3,3))) # wrong number bit depth
+
+        im = np.array(Image.open( opj('resources', 'bad_hald.png') ))
+        self.assertTrue((im == clut(opj('resources', 'bad_hald.png'))).all())
 
 
     def test_exceptions(self):
