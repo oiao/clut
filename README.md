@@ -27,20 +27,27 @@ In PIP editable mode:
 ## Example usage
 
 ``` python
+import numpy as np
+from PIL import Image
 from clut import CLUT
-# Initialize either with the number of levels, translates to 3D grid of i**2 points
-clut = CLUT(3)
+
+# Initialize either an identity CLUT
+clut = CLUT()
 # Or load a HaldCLUT image from file
 clut = CLUT('path/to/haldclut.png')
 
+
 # Apply CLUT
-import numpy as np
-from PIL import Image
-im = Image.open('target/img.png')
-im = np.array(im)
-im_out = clut(im)
+im_out = clut('target/img.png') # directly to image files
+im_out = clut(np.array(Image.open('target/img.png'))) # or to numpy arrays
 
 # Save the modified image
 im_out = Image.fromarray(im_out)
-im_out.save('modified/img.png')
+im_out.save('modified/img_out.png')
+
+# Modify the CLUT by accessing the r,g,b channels through indexing
+clut[120,0,255] = [0, 0, 0] # map rgb[120,0,255] to black
+
+# Save the CLUT
+clut.save('haldclut.png', size=8)
 ```
