@@ -21,7 +21,7 @@ setup(
     ],
     keywords         = ['image editing', 'CLUT', '3DCLUT', 'HaldCLUT', 'color lookup table', 'image filtering'],
     python_requires  = '>=3.6',
-    install_requires = ['numpy', 'Pillow'],
+    install_requires = ['numpy', 'Pillow', 'scipy'],
     packages         = packages,
     package_dir      = {NAME : NAME},
     package_data     = {NAME : ['tests/*']},

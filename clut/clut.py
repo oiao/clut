@@ -1,7 +1,6 @@
 import numpy as np
 from PIL import Image
-from scipy.interpolate  import RegularGridInterpolator
-from concurrent.futures import ProcessPoolExecutor
+from scipy.interpolate import RegularGridInterpolator
 
 __all__ = ['CLUT']
 
@@ -23,21 +22,20 @@ class CLUT:
     shape : tuple
         The shpe of `self.clut`
     size : int
-        The size of this CLUT instance, traslates to a 3d grid of `size**2`
+        The size of this CLUT instance, translates to a 3d grid of `size**2`
         points along each axis
     """
 
-    def __init__(self, size_path_array, depth=8):
+    def __init__(self, path_or_array=None, depth=8):
         """
         Initialize a new CLUT instance.
 
         Parameters
         ----------
-        size_path_array : int or str or ndarray
+        path_or_array : None, str, ndarray
             The type of the variable decides how to generate the new CLUT:
 
-            * _if int_, will generate an identity CLUT such that the resulting
-              cube will be defined by `i**2` points per channel.
+            * _if None_, will generate an full-size identity CLUT
             * _if str_, will try and load a [HaldCLUT](http://www.quelsolaar.com/technology/clut.html)
               image from the path and generate a respective 3D CLUT
             * _if ndarray_, will assume direct input of a 3D CLUT
@@ -51,22 +49,16 @@ class CLUT:
             self._dtype = np.uint16
         else:
             self._dtype = np.uint32
-        self._hashtable = {}
 
-        i = size_path_array
+        i = path_or_array
 
-        if isinstance(i, int):
-            maxi = int(np.sqrt(self._colors))
-            assert 2 <= i <= maxi, f"For {self._depth}bit, size must be between 2 and {maxi}"
-
-            points = np.linspace(0, self._colors-1, i**2)
+        if i is None:
+            points = np.arange(self._colors)
             b,g,r  = np.meshgrid(*3*[points], indexing='ij')
-            self.clut = np.stack([r,g,b]).T.astype(self._dtype)
-            self.size = i
+            clut   = np.stack([r,g,b]).T
 
         elif isinstance(i, str):
-            self.clut = self.load(i).astype(self._dtype)
-            self.size = int(np.sqrt(self.clut.shape[0]))
+            clut = self.load(i)
 
         elif isinstance(i, np.ndarray):
             assert i.ndim == 4, "Table must be 4-dimensional"
@@ -75,11 +67,12 @@ class CLUT:
             assert i.shape[0]   >= 4,   "Matrix has to consist of at least 3 points in each dimension"
             assert 0 <= i.min() <= self._colors-1, f"RGB Values must be in the range of [0, {self._colors-1}]"
             assert 0 <= i.max() <= self._colors-1, f"RGB Values must be in the range of [0, {self._colors-1}]"
-            self.size = int(np.sqrt(i.shape[0]))
-            self.clut = i.astype(self._dtype)
+            clut = i
 
         else:
             raise ValueError("Argument must either be an int (identity CLUT size), string (path to image file to be loaded) or ndarray (direct RGB CLUT).")
+
+        self._interpolate_to_full(clut)
 
 
     def __call__(self, image, workers=None):
@@ -98,35 +91,34 @@ class CLUT:
 
         image = image.reshape((image.shape[0]*image.shape[1], 3))
 
+        ...
 
-        size = self.shape[0]
-        if size < self._colors:
-            grid     = 3*[np.linspace(0, self._colors, size)]
-            interpol = RegularGridInterpolator(grid, self.clut)
-
-            def atom(i):
-                return interpol(i).astype(self._dtype)
-
-            with ProcessPoolExecutor(max_workers=workers) as e:
-                out = [i for i in e.map(atom, image)]
-            out = np.squeeze(out).astype(self._dtype)
-
-        return out
+        return
 
 
     def flat(self, size=None, swapaxes=False):
         """
         Generate a 2d mapping from the 3D CLUT by shaping into a matrix
-        of `(step**3, step**3)`, where ``step = sqrt(clut.shape[0])``.
+        of `(size**3, size**3)`.
+        If `None`: ``size = sqrt(clut.shape[0])``
         To comply with the HaldCLUT format, use `swapaxes=True`, which swaps the
         red (x) and blue (z) channels.
         """
-        rs = self.size**3
-        t  = self.clut
+        shape = self.shape[0]
+        if size is None or size**2 >= shape:
+            clut = self.clut
+        else:
+            assert size >= 2, "Minimum compressed size is 2"
+            points = np.linspace(0, self._colors-1, size**2).astype(self._dtype)
+            rgb    = self.clut[points,points,points]
+            b,g,r  = np.meshgrid(rgb[:,0], rgb[:,1], rgb[:,2], indexing='ij')
+            clut   = np.stack([r,g,b]).T
+
+        rs = int(np.sqrt(clut.shape[0])**3)
         if swapaxes:
             # When saving, red and blue channels are swapped
-            t = np.swapaxes(t, 0, 2)
-        return t.reshape(rs, rs, -1)
+            clut = np.swapaxes(clut, 0, 2)
+        return clut.reshape(rs, rs, -1)
 
 
     def __getitem__(self, elements):
@@ -138,35 +130,43 @@ class CLUT:
         return self.clut.shape
 
 
-    def save(self, path, format=None):
-        """ Saves the CLUT table as an HaldCLUT image to disk. """
-        im = Image.fromarray(self.flat(swapaxes=True))
+    def save(self, path, size=8, format=None):
+        """
+        Saves the CLUT table as an HaldCLUT image to disk
+        reducing the resulting image to `(size**3, size**3)` pixels.
+        """
+        im = Image.fromarray(self.flat(size=size, swapaxes=True))
         im.save(path, format=format)
 
 
     @staticmethod
     def load(fpath):
-        """ Loads a HaldCLUT from file, returns the associated 3D CLUT """
+        """
+        Loads a HaldCLUT from `fpath`, returns the associated 3D CLUT
+        """
         im = Image.open(fpath)
         assert im.size[0] == im.size[1], "Image must be square."
 
-        for i in range(2,65):
+        for i in range(2, int(np.sqrt(self._colors))):
             if i**3 == im.size[0]:
                 cubesize = i**2
                 break
         else:
-            raise ValueError("Could not determine CLUT size. Should be between 8 and 4096 px")
+            raise ValueError(f"Could not determine CLUT size. Should be between 8 and {int(np.sqrt(self._colors)} px")
 
         clut = np.array(im).reshape((cubesize,cubesize,cubesize,3))
         clut = np.swapaxes(clut, 0, 2) # When saved, red and blue channels are swapped
         return clut
 
 
-
-
-
-
-# Testing
-# clut = CLUT(4)
-# im = Image.open('IMG_3364.jpg')
-# clut(im, workers=36)
+    def _interpolate_to_full(self,clut):
+        # Use the full CLUT after init
+        size = clut.shape[0]
+        if size < self._colors:
+            grid_in  = np.linspace(0, self._colors-1, size)
+            interpol = RegularGridInterpolator(3*[grid_in], clut)
+            points   = np.arange(self._colors)
+            b,g,r    = np.meshgrid(*3*[points], indexing='ij')
+            fullclut = np.stack([r,g,b]).T
+            clut     = interpol(fullclut)
+        self.clut = clut.astype(self._dtype)
