@@ -160,6 +160,18 @@ class CLUT:
         return clut
 
 
+    def randomize(self, mu=1, sigma=0.1):
+        """
+        Multiply the current CLUT by a random Gaussian distribution
+        drawn from `~| N(mu, sigma**2) |`.
+        """
+        rand = np.abs( sigma*np.random.randn(*self.shape) + mu )
+        clut = rand * self.clut.astype(float)
+        clut[clut < 0] = 0
+        clut[clut > self._colors-1] = self._colors-1
+        self.clut = clut.astype(self._dtype)
+
+
     def _interpolate_to_full(self,clut):
         # Use the full CLUT after init
         size = clut.shape[0]
