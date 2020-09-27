@@ -36,7 +36,6 @@ clut = CLUT()
 # Or load a HaldCLUT image from file
 clut = CLUT('path/to/haldclut.png')
 
-
 # Apply CLUT
 im_out = clut('target/img.png') # directly to image files
 im_out = clut(np.array(Image.open('target/img.png'))) # or to numpy arrays

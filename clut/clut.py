@@ -13,17 +13,14 @@ class CLUT:
     >>> clut[r_in, g_in, b_in] = [r_out, g_out, b_out]
 
     where r,g,b are the red green and blue channels of an image
-    in the range of [0, 255].
+    in the range of `[0, 2**depth)`.
 
     Attributes
     ----------
     clut : ndarray
         The array representing this instances CLUT
     shape : tuple
-        The shpe of `self.clut`
-    size : int
-        The size of this CLUT instance, translates to a 3d grid of `size**2`
-        points along each axis
+        The shape of `self.clut`
     """
 
     def __init__(self, path_or_array=None, depth=8):
@@ -39,6 +36,8 @@ class CLUT:
             * _if str_, will try and load a [HaldCLUT](http://www.quelsolaar.com/technology/clut.html)
               image from the path and generate a respective 3D CLUT
             * _if ndarray_, will assume direct input of a 3D CLUT
+        depth : int
+            Number of bits/channel. Currently, only 8 (256 colors) is supported.
         """
         assert depth == 8, 'Currently, only a 8bit color depth is supported'
         self._depth  = int(depth)
@@ -75,7 +74,7 @@ class CLUT:
         self._interpolate_to_full(clut)
 
 
-    def __call__(self, image, workers=None):
+    def __call__(self, image, workers=None) -> np.ndarray:
         """ Apply CLUT to `image`, return ndarray """
         if isinstance(image, Image.Image):
             image.convert(colors=self._depth)
@@ -125,13 +124,16 @@ class CLUT:
     def __getitem__(self, elements):
         return self.clut[elements]
 
+    def __setitem__(self,elements,value):
+        value = np.array(value).astype(self._dtype)
+        self.clut[elements] = value
 
     @property
     def shape(self):
         return self.clut.shape
 
 
-    def save(self, path, size=8, format=None):
+    def save(self, path:str, size:int=8, format=None):
         """
         Saves the CLUT table as an HaldCLUT image to disk
         reducing the resulting image to `(size**3, size**3)` pixels.
