@@ -1,6 +1,8 @@
+from typing import *
 import numpy as np
 from PIL import Image
 from scipy.interpolate import RegularGridInterpolator
+from scipy.ndimage import gaussian_filter
 
 __all__ = ['CLUT']
 
@@ -80,7 +82,7 @@ class CLUT:
             image.convert(colors=self._depth)
             image = np.array(image)
         elif isinstance(image, str):
-            image = np.array(Image.open(image))
+            image = np.array(Image.open(image).convert('RGB'))
         elif not isinstance(image, np.ndarray):
             raise ValueError(f"Image must either be a string (fpath), a PIL.Image object or ndarray. Got {type(image)} instead.")
         assert image.ndim      == 3, f"Not a valid image: array must be 3-dimensional, is {image.ndim}d instead."
@@ -128,10 +130,17 @@ class CLUT:
         value = np.array(value).astype(self._dtype)
         self.clut[elements] = value
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.clut == other.clut
+        elif isinstance(other, np.ndarray):
+            return self.clut == other
+        else:
+            return np.zeros(shape=self.shape).astype(bool)
+
     @property
     def shape(self):
         return self.clut.shape
-
 
     def save(self, path:str, size:int=8, format=None):
         """
@@ -140,7 +149,6 @@ class CLUT:
         """
         im = Image.fromarray(self.flat(size=size, swapaxes=True))
         im.save(path, format=format)
-
 
     @staticmethod
     def load(fpath, colors=256):
@@ -161,7 +169,6 @@ class CLUT:
         clut = np.swapaxes(clut, 0, 2) # When saved, red and blue channels are swapped
         return clut
 
-
     def randomize(self, mu=1, sigma=0.1):
         """
         Multiply the current CLUT by a random Gaussian distribution
@@ -173,6 +180,13 @@ class CLUT:
         clut[clut > self._colors-1] = self._colors-1
         self.clut = clut.astype(self._dtype)
 
+    def gaussianfilter(self, sigma, **kwargs):
+        """
+        Apply a
+        `scipy.gaussian_filter <https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.gaussian_filter.html>`_
+        to the CLUT instance.
+        """
+        self.clut = gaussian_filter(self.clut, sigma, **kwargs)
 
     def _interpolate_to_full(self,clut):
         # Use the full CLUT after init
