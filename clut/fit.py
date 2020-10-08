@@ -82,7 +82,7 @@ def _getim(im:Union[str, Image.Image]) -> Image.Image:
     if isinstance(im, Image.Image):
         return im
     elif isinstance(im, str):
-        return Image.open(im)
+        return Image.open(im).convert('RGB')
     else:
         raise ValueError(f"Provided image `{im}` is neither a filepath nor a `PIL.Image`.")
 
