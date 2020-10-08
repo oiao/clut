@@ -1,9 +1,9 @@
 import numpy as np
 from clut import CLUT
-from PIL import Image
+from PIL import Image, ImageFilter
 from typing import *
 
-def clutfit(*images : Sequence[Tuple[str, str]], scale:float=0.5, verbose=False) -> CLUT:
+def clutfit(*images : Sequence[Tuple[str, str]], scale:float=0.5, shuffle=True, printstats=False, sigma=0) -> CLUT:
     """
     Fit a corresponding CLUT, given a series of unfiltered/filtered images.
 
@@ -23,18 +23,17 @@ def clutfit(*images : Sequence[Tuple[str, str]], scale:float=0.5, verbose=False)
          A CLUT instance that re-creates the input-output mapping
          given in `images`
     """
-    clut = CLUT()
-    hashtable = set()
+    # clut = CLUT()
     RGB_IN  = []
     RGB_OUT = []
 
     # Convert to arrays
-    for num,ims in enumerate(images,1):
+    for ims in images:
         im1 = _getim(ims[0])
         im2 = _getim(ims[1])
         assert im1.size == im2.size, 'Image sizes do not match'
 
-        if scale < 1:
+        if 0 < scale < 1:
             resize = [int(scale*i) for i in im1.size]
             im1 = im1.resize(resize)
             im2 = im2.resize(resize)
@@ -47,27 +46,35 @@ def clutfit(*images : Sequence[Tuple[str, str]], scale:float=0.5, verbose=False)
     RGB_IN  = np.concatenate(RGB_IN)
     RGB_OUT = np.concatenate(RGB_OUT)
 
-    # Remove duplicate colors
-    mask = []
-    for rgbin in RGB_IN:
-        b = rgbin.tobytes()
-        if b in hashtable:
-            mask.append(False)
-        else:
-            hashtable.add(b)
-            mask.append(True)
-    RGB_IN, RGB_OUT = RGB_IN[mask], RGB_OUT[mask]
+    if shuffle:
+        order   = np.arange(len(RGB_IN))
+        np.random.shuffle(order)
+        RGB_IN  = RGB_IN[order]
+        RGB_OUT = RGB_OUT[order]
 
-    if verbose:
+    # Remove duplicate colors
+    if printstats:
+        hashtable = set()
+        mask = []
+        for rgbin in RGB_IN:
+            b = rgbin.tobytes()
+            if b in hashtable:
+                mask.append(False)
+            else:
+                hashtable.add(b)
+                mask.append(True)
+        RGB_IN, RGB_OUT = RGB_IN[mask], RGB_OUT[mask]
+
         oldlen = len(mask)
         newlen = len(RGB_IN)
         print(f"Unique colors: {newlen}. Duplicate colors: {oldlen-newlen}")
         print(f"This covers {100 * (newlen/(256**3)):.2f}% of the complete color space.")
-    return RGB_IN, RGB_OUT
 
-    r,g,b  = RGB_IN[:,0], RGB_IN[:,1], RGB_IN[:,2]
+    clut = CLUT()
+    r,g,b   = RGB_IN[:,0], RGB_IN[:,1], RGB_IN[:,2]
     clut[r,g,b] = RGB_OUT
-
+    if sigma:
+        clut.gaussianfilter(sigma, mode='wrap')
     return clut
 
 
