@@ -44,6 +44,26 @@ class TestCLUT(unittest.TestCase):
         self.assertTrue((im == clut(opj('resources', 'bad_hald.png'))).all())
 
 
+    def test_methods(self):
+        clut = CLUT()
+        self.assertTrue((clut == CLUT()).all())
+        self.assertTrue((CLUT() == clut.clut).all())
+        self.assertFalse((clut == 1).all())
+
+        clut[1,2,3] = 1
+        self.assertTrue((clut[1,2,3] == [1,1,1]).all())
+
+        clut.randomize()
+        self.assertEqual(clut.shape, (256,256,256,3))
+
+        clut.gaussianfilter(1.)
+        self.assertEqual(clut.shape, (256,256,256,3))
+
+        self.assertEqual(clut.flat(4).shape, (64, 64, 3))
+        with self.assertRaises(AssertionError):
+            clut.flat(1)
+
+
     def test_exceptions(self):
         with self.assertRaises(ValueError):
             clut = CLUT(3.) # float not understood
