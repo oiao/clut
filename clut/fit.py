@@ -3,19 +3,36 @@ from clut import CLUT
 from PIL import Image, ImageFilter
 from typing import *
 
+__all__ = ['clutfit']
+
 def clutfit(*images : Sequence[Tuple[str, str]], scale:float=0.5, shuffle=True, printstats=False, sigma=0) -> CLUT:
     """
     Fit a corresponding CLUT, given a series of unfiltered/filtered images.
 
     Properties
     ----------
-    images : tuple
+    images : sequence of tuples
         A sequence of tuples where each tuple contains the
         unedited input image in the first position and the same image with an applied
         CLUT filter in the second position.
         Elements can either be strings of file paths or `PIL.Image` objects.
     scale : 0 > float >= 1
-        Apply a scaling to each image before processing
+        Apply a scaling to each image before processing.
+        Setting this value to < 1 helps to reduce artifacts
+        in the resulting CLUT
+    shuffle : bool
+        Shuffle the input and output colors before generating the CLUT.
+        Setting this value to `True` helps to reduce artifacts in the resulting
+        CLUT
+    printstats : bool
+        If `True`, will print the number of unique colors covered by all
+        input images provided.
+        Disabling this setting speeds up the fitting process
+    sigma : float >= 0
+        If set, will apply `CLUT.gaussianfilter(sigma)` to the
+        resulting CLUT. Doing so can help to futher reduce artifacts
+        at the cost of color accuracy (with respect to the CLUT).
+        Conservative values are between 0.1 and 0.5.
 
     Returns
     -------
@@ -85,18 +102,3 @@ def _getim(im:Union[str, Image.Image]) -> Image.Image:
         return Image.open(im).convert('RGB')
     else:
         raise ValueError(f"Provided image `{im}` is neither a filepath nor a `PIL.Image`.")
-
-
-ims = [
-    # ('im1_in.JPG', 'im1_out.JPG'),
-    # ('im2_in.JPG', 'im2_out.JPG'),
-    # ('im3_in.JPG', 'im3_out.JPG'),
-    # ('im4_in.JPG', 'im4_out.JPG'),
-    ]
-rgbin, rgbout = clutfit(*ims, scale=1, verbose=True)
-
-# %%
-# clutim = clut('im2_in.JPG')
-# clutim = Image.fromarray(clutim)
-# clutim.save('im2_clut.JPG')
-# clut.save('clut.png', size=10)
