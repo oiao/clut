@@ -25,5 +25,5 @@ setup(
     packages         = packages,
     package_dir      = {NAME : NAME},
     package_data     = {NAME : ['tests/*']},
-    # scripts          = [opj('scripts', NAME)],
+    scripts          = [opj('scripts', NAME)],
 )

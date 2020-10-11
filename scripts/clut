@@ -1,0 +1,114 @@
+#!/usr/bin/env python
+
+import os
+from os.path import join as opj
+from glob import glob
+import argparse
+from clut import *
+from PIL import Image
+
+parser = argparse.ArgumentParser(description='CLUT Command Line Interface')
+parser.add_argument('-s', '--silent', action='store_true', help='Disable verbose output')
+subpar = parser.add_subparsers(dest='command')
+
+par_apply = subpar.add_parser('apply', help='Apply a HaldCLUT image filter to a number of files or directories')
+par_apply.add_argument('haldclut', help='Path to the HaldCLUT image filter')
+par_apply.add_argument('--to', required=True, nargs='+', help='The target(s) that the HaldCLUT is applied to. Can be (multiple) files or directories.')
+par_apply.add_argument('--scale', help='Scale all output images. Default: 1', type=float, default=1)
+par_apply.add_argument('--suffix',help='The suffix to be appended to the output file names', default='_clut')
+
+par_bat = subpar.add_parser('batch-apply', help='Batch-Apply multiple HaldCLUT image filters to one target image')
+par_bat.add_argument('--clutdir', help='Directory with HaldCLUT image files', required=True)
+par_bat.add_argument('--to', required=True, nargs=1, help='The target each HaldCLUT will be applied to')
+par_bat.add_argument('--scale', help='Scale all output images. Default: 0.2', type=float, default=.2)
+par_bat.add_argument('-o', '--out',help='Output directory. Default: `cluts`', default='cluts')
+
+par_fit = subpar.add_parser('fit', help='Re-create a HaldCLUT filter from a series of input/output images.')
+par_fit.add_argument('--from', required=True, nargs='+', help='Sequence of unedited image paths or directory', dest='fro')
+par_fit.add_argument('--to',   required=True, nargs='+', help='Sequence of edited image paths in the same order as `--FROM` or directory. In case of a directory, file names must be the same.')
+par_fit.add_argument('-o', '--out', help='Output path of the generated HaldCLUT', default='clutfit.png')
+par_fit.add_argument('--size',  help='Size of the generated HaldCLUT (2-64).', type=int, default=8)
+par_fit.add_argument('--scale', help='Scale all input/output images before processing. Helps to reduce artifacts. Default: 0.5', type=float, default=0.5)
+par_fit.add_argument('--sigma', help='Apply a Gaussian Filter to the CLUT. Hels to reduce artifacts at the cost of color accuracy.', type=float, default=0)
+par_fit.add_argument('--noshuffle', help='Disable input/output RGB shuffling before creating the CLUT. Disabing will likely result in more artifacts.', action='store_true')
+par_fit.add_argument('--printstats', help='Print the number of unique RGB colors found in all input/output images. Enabling this slows down the fitting process', action='store_true')
+
+args = parser.parse_args()
+
+def vprint(*a, **kw):
+    if not args.silent:
+        print(*a, **kw)
+
+def path2im(path, scale=1):
+    try:    im = Image.open(path)
+    except:
+        vprint(f"ERROR: Could not open image in '{path}'.")
+        return None
+    if scale < 1:
+        size = [int(scale*i) for i in im.size]
+        im = im.resize(size)
+    return im
+
+
+
+if args.command == 'apply':
+    if not os.path.isfile(args.haldclut):
+        vprint(f"The file '{args.haldclut}' does not exist, exiting!")
+        exit(1)
+
+    try:
+        clut = CLUT(args.haldclut)
+    except:
+        vprint(f"\n\n ERROR: Could not open the HaldCLUT image in {args.haldclut}. Traceback follows: \n\n")
+        raise
+
+    def do_path(path):
+        im = path2im(path, args.scale)
+        if im is not None:
+            vprint(f"{path} ...")
+            imout = clut(im)
+            imout = Image.fromarray(imout)
+            name  = os.path.splitext(path)
+            name  = f"{name[0]}{args.suffix}{name[1]}"
+            imout.save(name)
+
+    for path in args.to:
+        if os.path.isdir(path):
+            for ppath in glob(path+'*'):
+                do_path(ppath)
+        else:
+            do_path(path)
+
+
+elif args.command == 'batch-apply':
+    print(f"Batch-application of CLUTS with this package is slow, please use ImageMagick instead!")
+
+elif args.command == 'fit':
+    names = []
+    for inims, outims in zip(args.fro, args.to):
+        if not os.path.exists(inims):
+            vprint(f"ERPROR: --from {inims} does not exist.")
+            exit(1)
+        if not os.path.exists(outims):
+            vprint(f"ERPROR: --from {outims} does not exist.")
+            exit(1)
+
+        dirs = sum([ os.path.isdir(i) for i in (inims, outims) ])
+        if dirs == 1:
+            vprint(f"ERPROR: The --from/--to pair '{inims}' / '{outims}' is not of the same type. Make sure the positions are the same in both arguments and both are directories or image files.")
+            exit(1)
+        elif dirs == 2:
+            _names = set(os.listdir(inims)) .intersection( set(os.listdir(outims)) )
+            for name in _names:
+                names.append((opj(inims,name), opj(outims,name)))
+        elif dirs == 0:
+            names.append((inims,outims))
+
+    if not names:
+        vprint(f"ERROR: Could not generate input/output image pairs. This happens when there are no files with the same names in the specified directories")
+        exit(1)
+    else:
+        vprint(f"Fitting based on {len(names)} image pairs ...")
+        
+    clut  = clutfit(*names, scale=args.scale, shuffle=not args.noshuffle, sigma=args.sigma, printstats=args.printstats)
+    clut.save(args.out, size=args.size)
