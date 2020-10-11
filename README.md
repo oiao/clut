@@ -10,8 +10,9 @@ The package was originally created for the purpose of re-creating CLUT filters f
 images.
 When is this necessary? Usually, if one wanted to _'rip'_ a filter from your favourite app,
 all that needs to be done is loading an identity HaldCLUT image and applying the desired filter to it.
-This is not easily possible if the application of a filter happens on a camera instead of an app, since raw image data is modified directly.
-My Ricoh GR for example has a much-loved positive film effect,
+This is not easily possible if the application of a filter happens on a camera instead of an app,
+the since raw image data is modified directly.
+The Ricoh GR for example has a much-loved positive film effect,
 but I could not apply it to arbitrary images on my computer... until now.
 
 
@@ -21,14 +22,16 @@ but I could not apply it to arbitrary images on my computer... until now.
 
 
 ## Installation
-In PIP editable mode:
-* `git clone git@github.com:oiao/clut.git`
-* `pip -e clut install`
-
 Dependencies:
 [Pillow](https://github.com/python-pillow/Pillow),
 [numpy](https://numpy.org/),
 [scipy](https://www.scipy.org/).
+
+Install in PIP editable mode:
+* `git clone git@github.com:oiao/clut.git`
+* `pip -e clut install`
+
+For verification run the unit tests with `tests/run_tests.sh`.
 
 ## Usage: Basics
 ``` python
