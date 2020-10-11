@@ -23,7 +23,6 @@ def __autoimport(use_only=None):
     return ret
 
 
-from ._version import *
-
+from ._version import __version__
 __all__  = ['__version__']
-__all__ += __autoimport(['clut'])
+__all__ += __autoimport(['clut', 'fit'])
