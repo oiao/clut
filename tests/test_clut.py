@@ -20,10 +20,17 @@ class TestCLUT(unittest.TestCase):
     def test_saveload(self):
         clut1 = CLUT()
         clut1.save('testclut.png')
+        clut1.npsave('testclut')
+        self.assertTrue(os.path.isfile('testclut.npy'))
+
         clut2 = CLUT('testclut.png')
         relerr = np.abs(clut1.clut - clut2.clut).max() # account for interpolation and compression errors
         self.assertLessEqual(relerr, 1)
         os.remove('testclut.png')
+
+        clut2 = CLUT('testclut.npy')
+        self.assertTrue( (clut1==clut2).all() )
+        os.remove('testclut.npy')
 
 
     def test_call(self):
@@ -98,6 +105,6 @@ class TestCLUT(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        for i in ['testclut.png']:
+        for i in ['testclut.png', 'testclut.png']:
             if os.path.exists(i):
                 os.remove(i)

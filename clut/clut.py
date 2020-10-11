@@ -59,7 +59,10 @@ class CLUT:
             clut   = np.stack([r,g,b]).T
 
         elif isinstance(i, str):
-            clut = self.load(i, self._colors)
+            if i.endswith('.npy'):
+                clut = np.load(i)
+            else:
+                clut = self.load(i, self._colors)
 
         elif isinstance(i, np.ndarray):
             assert i.ndim == 4, "Table must be 4-dimensional"
@@ -76,7 +79,7 @@ class CLUT:
         self._interpolate_to_full(clut)
 
 
-    def __call__(self, image, workers=None) -> np.ndarray:
+    def __call__(self, image) -> np.ndarray:
         """ Apply CLUT to `image`, return ndarray """
         if isinstance(image, Image.Image):
             image.convert(colors=self._depth)
@@ -149,6 +152,13 @@ class CLUT:
         """
         im = Image.fromarray(self.flat(size=size, swapaxes=True))
         im.save(path, format=format)
+
+    def npsave(self, path):
+        """
+        Saves the CLUT in the numpy binary format.
+        Loading from binary significantly speeds up re-initialization.
+        """
+        np.save(path, self.clut)
 
     @staticmethod
     def load(fpath, colors=256):
