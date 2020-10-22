@@ -2,6 +2,7 @@
 
 import os
 from os.path import join as opj
+import numpy as np
 from glob import glob
 import argparse
 from clut import *
@@ -62,7 +63,8 @@ def getfilter(haldpath):
     if size > 64:
         vprint('\n\nERROR: Pillow does not support HaldCLUTs that are saved with a size > 8. Please provide a smaller-sized HaldCLUT (use the `size` argument when calling `CLUT.save`).')
         exit(1)
-    clut = clut.clut.reshape(3 * size**3)
+    clut = np.swapaxes(clut.clut,0,2)
+    clut = clut.reshape(3 * size**3)/255.
     return ImageFilter.Color3DLUT(size, clut)
 
 
@@ -105,7 +107,7 @@ elif args.command == 'batch-apply':
         print(f"\n\nERROR: The target image '{args.to}' does not exist.")
 
     im = path2im(args.to, args.scale)
-    for clutpath in glob(opj(args.clutdir.'*')):
+    for clutpath in glob(opj(args.clutdir,'*')):
         clut = getfilter(clutpath)
         imout = im.filter(clut)
         imout.save(opj(args.out, os.path.basename(clutpath)))
@@ -115,15 +117,15 @@ elif args.command == 'fit':
     names = []
     for inims, outims in zip(args.fro, args.to):
         if not os.path.exists(inims):
-            vprint(f"ERPROR: --from {inims} does not exist.")
+            vprint(f"ERROR: --from {inims} does not exist.")
             exit(1)
         if not os.path.exists(outims):
-            vprint(f"ERPROR: --from {outims} does not exist.")
+            vprint(f"ERROR: --to {outims} does not exist.")
             exit(1)
 
         dirs = sum([ os.path.isdir(i) for i in (inims, outims) ])
         if dirs == 1:
-            vprint(f"ERPROR: The --from/--to pair '{inims}' / '{outims}' is not of the same type. Make sure the positions are the same in both arguments and both are directories or image files.")
+            vprint(f"ERROR: The --from/--to pair '{inims}' / '{outims}' is not of the same type. Make sure the positions are the same in both arguments and both are directories or image files.")
             exit(1)
         elif dirs == 2:
             _names = set(os.listdir(inims)) .intersection( set(os.listdir(outims)) )
