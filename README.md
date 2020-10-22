@@ -8,10 +8,10 @@ All IO operations are handled by [Pillow](https://github.com/python-pillow/Pillo
 
 The package was originally created for the purpose of re-creating CLUT filters from a set of edited and un-edited
 images.
-When is this necessary? Usually, if one wanted to _'rip'_ a filter from your favourite app,
+When is this necessary? Usually, if one wanted to 'rip' a filter from your favourite app,
 all that needs to be done is loading an identity HaldCLUT image and applying the desired filter to it.
 This is not easily possible if the application of a filter happens on a camera instead of an app,
-the since raw image data is modified directly.
+since the raw image data is often modified directly.
 The Ricoh GR for example has a much-loved positive film effect,
 but I could not apply it to arbitrary images on my computer... until now.
 
@@ -29,7 +29,7 @@ Dependencies:
 
 Install in PIP editable mode:
 * `git clone git@github.com:oiao/clut.git`
-* `pip -e clut install`
+* `pip install -e clut`
 
 For verification run the unit tests with `tests/run_tests.sh`.
 
