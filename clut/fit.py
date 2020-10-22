@@ -1,7 +1,7 @@
 import numpy as np
-from clut import CLUT
-from PIL import Image, ImageFilter
 from typing import *
+from PIL import Image, ImageFilter
+from .clut import CLUT
 
 __all__ = ['clutfit']
 
