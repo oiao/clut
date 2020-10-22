@@ -5,7 +5,7 @@ from os.path import join as opj
 from glob import glob
 import argparse
 from clut import *
-from PIL import Image
+from PIL import Image, ImageFilter
 
 parser = argparse.ArgumentParser(description='CLUT Command Line Interface')
 parser.add_argument('-s', '--silent', action='store_true', help='Disable verbose output')
@@ -19,7 +19,7 @@ par_apply.add_argument('--suffix',help='The suffix to be appended to the output 
 
 par_bat = subpar.add_parser('batch-apply', help='Batch-Apply multiple HaldCLUT image filters to one target image')
 par_bat.add_argument('--clutdir', help='Directory with HaldCLUT image files', required=True)
-par_bat.add_argument('--to', required=True, nargs=1, help='The target each HaldCLUT will be applied to')
+par_bat.add_argument('--to', required=True, nargs=1, help='Single target image each HaldCLUT will be applied to')
 par_bat.add_argument('--scale', help='Scale all output images. Default: 0.2', type=float, default=.2)
 par_bat.add_argument('-o', '--out',help='Output directory. Default: `cluts`', default='cluts')
 
@@ -49,25 +49,37 @@ def path2im(path, scale=1):
         im = im.resize(size)
     return im
 
-
-
-if args.command == 'apply':
-    if not os.path.isfile(args.haldclut):
-        vprint(f"The file '{args.haldclut}' does not exist, exiting!")
+def getfilter(haldpath):
+    if not os.path.isfile(haldpath):
+        vprint(f"\n\nERROR: The file '{haldpath}' does not exist, exiting!")
         exit(1)
-
     try:
-        clut = CLUT(args.haldclut)
+        clut = CLUT(haldpath, _nointerpol=True)
     except:
-        vprint(f"\n\n ERROR: Could not open the HaldCLUT image in {args.haldclut}. Traceback follows: \n\n")
+        vprint(f"\n\nERROR: Could not open the HaldCLUT image in {haldpath}. Traceback follows:\n\n")
         raise
+    size = clut.shape[0]
+    if size > 64:
+        vprint('\n\nERROR: Pillow does not support HaldCLUTs that are saved with a size > 8. Please provide a smaller-sized HaldCLUT (use the `size` argument when calling `CLUT.save`).')
+        exit(1)
+    clut = clut.clut.reshape(3 * size**3)
+    return ImageFilter.Color3DLUT(size, clut)
+
+
+
+
+if args.command is None:
+    parser.print_help()
+
+
+elif args.command == 'apply':
+    clut = getfilter(args.haldclut)
 
     def do_path(path):
         im = path2im(path, args.scale)
         if im is not None:
             vprint(f"{path} ...")
-            imout = clut(im)
-            imout = Image.fromarray(imout)
+            imout = im.filter(clut)
             name  = os.path.splitext(path)
             name  = f"{name[0]}{args.suffix}{name[1]}"
             imout.save(name)
@@ -81,7 +93,23 @@ if args.command == 'apply':
 
 
 elif args.command == 'batch-apply':
-    print(f"Batch-application of CLUTS with this package is slow, please use ImageMagick instead!")
+    if not os.path.isdir(args.clutdir):
+        print(f"\n\nERROR: The CLUT directory '{args.clutdir}' does not exists or is not a directory.")
+        exit(1)
+    if not os.path.exists(args.out):
+        os.makedirs(args.out)
+    elif not os.path.isdir(args.out):
+        print(f"\n\nERROR: A file with the output directory's name '{args.clutdir}' already exists.")
+        exit(1)
+    if not os.path.exists(args.to):
+        print(f"\n\nERROR: The target image '{args.to}' does not exist.")
+
+    im = path2im(args.to, args.scale)
+    for clutpath in glob(opj(args.clutdir.'*')):
+        clut = getfilter(clutpath)
+        imout = im.filter(clut)
+        imout.save(opj(args.out, os.path.basename(clutpath)))
+
 
 elif args.command == 'fit':
     names = []
@@ -109,6 +137,6 @@ elif args.command == 'fit':
         exit(1)
     else:
         vprint(f"Fitting based on {len(names)} image pairs ...")
-        
+
     clut  = clutfit(*names, scale=args.scale, shuffle=not args.noshuffle, sigma=args.sigma, printstats=args.printstats)
     clut.save(args.out, size=args.size)

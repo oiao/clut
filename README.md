@@ -2,9 +2,6 @@
 This package implements 3d [color lookup tables](https://en.wikipedia.org/wiki/3D_lookup_table)
 (CLUT) for image manipulation and saving/loading from and to the
 [HaldCLUT](http://www.quelsolaar.com/technology/clut.html) format.
-It is a numpy-only implementation in the scope of CLUT generation and application
-to 3d arrays.
-All IO operations are handled by [Pillow](https://github.com/python-pillow/Pillow).
 
 The package was originally created for the purpose of re-creating CLUT filters from a set of edited and un-edited
 images.
@@ -14,10 +11,6 @@ This is not easily possible if the application of a filter happens on a camera i
 since the raw image data is often modified directly.
 The Ricoh GR for example has a much-loved positive film effect,
 but I could not apply it to arbitrary images on my computer... until now.
-
-
-
-
 
 
 
@@ -32,6 +25,8 @@ Install in PIP editable mode:
 * `pip install -e clut`
 
 For verification run the unit tests with `tests/run_tests.sh`.
+
+
 
 ## Usage: Basics
 ``` python

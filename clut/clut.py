@@ -25,7 +25,7 @@ class CLUT:
         The shape of `self.clut`
     """
 
-    def __init__(self, path_or_array=None, depth=8):
+    def __init__(self, path_or_array=None, depth=8, _nointerpol=False):
         """
         Initialize a new CLUT instance.
 
@@ -76,7 +76,10 @@ class CLUT:
         else:
             raise ValueError("Argument must either be an int (identity CLUT size), string (path to image file to be loaded) or ndarray (direct RGB CLUT).")
 
-        self._interpolate_to_full(clut)
+        if _nointerpol:
+            self.clut = clut
+        else:
+            self._interpolate_to_full(clut)
 
 
     def __call__(self, image) -> np.ndarray:
