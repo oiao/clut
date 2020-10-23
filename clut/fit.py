@@ -3,11 +3,12 @@ from typing import *
 from PIL import Image, ImageFilter
 from .clut import CLUT
 
+
 __all__ = ['clutfit']
 
-def clutfit(*images : Sequence[Tuple[str, str]], scale:float=0.5, shuffle=True, printstats=False, sigma=0) -> CLUT:
+def clutfit(*images : Sequence[Tuple[str, str]], scale:float=0.5, shuffle=True, printstats=False, denoise=0) -> CLUT:
     """
-    Fit a corresponding CLUT, given a series of unfiltered/filtered images.
+    Fit a corresponding CLUT, given a series of (unfiltered, filtered) image tuples.
 
     Properties
     ----------
@@ -28,11 +29,10 @@ def clutfit(*images : Sequence[Tuple[str, str]], scale:float=0.5, shuffle=True, 
         If `True`, will print the number of unique colors covered by all
         input images provided.
         Disabling this setting speeds up the fitting process
-    sigma : float >= 0
-        If set, will apply `CLUT.gaussianfilter(sigma)` to the
-        resulting CLUT. Doing so can help to futher reduce artifacts
-        at the cost of color accuracy (with respect to the CLUT).
-        Conservative values are between 0.1 and 0.5.
+    denoise : float >= 0
+        If greater than 0, will apply `CLUT.denoise(eps=denoise)` to the
+        resulting CLUT. Doing so can greatly reduce artifacts.
+        Typical values are 1e-4 (very good results, slow) to 0.1 (at least you tried, fast).
 
     Returns
     -------
@@ -90,8 +90,10 @@ def clutfit(*images : Sequence[Tuple[str, str]], scale:float=0.5, shuffle=True, 
     clut = CLUT()
     r,g,b   = RGB_IN[:,0], RGB_IN[:,1], RGB_IN[:,2]
     clut[r,g,b] = RGB_OUT
-    if sigma:
-        clut.gaussianfilter(sigma, mode='wrap')
+    if denoise > 0:
+        if denoise < 1e-3:
+            print(f"Denoising, this can usually take up to a couple of minutes ...")
+        clut.denoise(eps=denoise)
     return clut
 
 

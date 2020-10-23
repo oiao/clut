@@ -32,6 +32,8 @@ par_fit.add_argument('--size',  help='Size of the generated HaldCLUT (2-64).', t
 par_fit.add_argument('--scale', help='Scale all input/output images before processing. Helps to reduce artifacts. Default: 0.5', type=float, default=0.5)
 par_fit.add_argument('--sigma', help='Apply a Gaussian Filter to the CLUT. Hels to reduce artifacts at the cost of color accuracy.', type=float, default=0)
 par_fit.add_argument('--noshuffle', help='Disable input/output RGB shuffling before creating the CLUT. Disabing will likely result in more artifacts.', action='store_true')
+par_fit.add_argument('--denoise', help='De-noise the resulting CLUT. If your images have visible artifacts after applying the CLUT, set this parameter to > 0. Typical values are 1e-4 (very good results, slow) to 0.1 (better-than-nothing results, fast). Default value is 0 (off).', type=float, default=0)
+par_fit.add_argument('--lossless', help='Saves the CLUT instance in a lossless binary format. Use this to speed up the `clut apply` command.', action='store_true')
 par_fit.add_argument('--printstats', help='Print the number of unique RGB colors found in all input/output images. Enabling this slows down the fitting process', action='store_true')
 
 args = parser.parse_args()

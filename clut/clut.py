@@ -3,6 +3,11 @@ import numpy as np
 from PIL import Image
 from scipy.interpolate import RegularGridInterpolator
 from scipy.ndimage import gaussian_filter
+try:
+    from skimage.restoration import denoise_tv_chambolle
+    SKIMAGE = True
+except ImportError:
+    SKIMAGE = False
 
 __all__ = ['CLUT']
 
@@ -171,12 +176,12 @@ class CLUT:
         im = Image.open(fpath)
         assert im.size[0] == im.size[1], "Image must be square."
 
-        for i in range(2, int(np.sqrt(colors))):
+        for i in range(2, int(np.sqrt(colors))+1):
             if i**3 == im.size[0]:
                 cubesize = i**2
                 break
         else:
-            raise ValueError(f"Could not determine CLUT size. Should be between 8 and {int(np.sqrt(colors))} px")
+            raise ValueError(f"Could not determine CLUT size. Should be between 2 and {int(np.sqrt(colors))-1}")
 
         clut = np.array(im).reshape((cubesize,cubesize,cubesize,3))
         clut = np.swapaxes(clut, 0, 2) # When saved, red and blue channels are swapped
@@ -193,15 +198,22 @@ class CLUT:
         clut[clut > self._colors-1] = self._colors-1
         self.clut = clut.astype(self._dtype)
 
-    def gaussianfilter(self, sigma, **kwargs):
+    def denoise(self, weight=0.1, eps=1e-2, n_iter_max=100):
         """
         Apply a
-        `scipy.gaussian_filter <https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.gaussian_filter.html>`_
-        to the CLUT instance.
+        `skimage.denoise_tv_chambolle <https://scikit-image.org/docs/dev/api/skimage.restoration.html#denoise-tv-chambolle>`_
+        filter to the CLUT instance.
+        Use `eps` to control the quality of the denoising (lower values are better but slower).
         """
-        self.clut = gaussian_filter(self.clut, sigma, **kwargs)
+        if not SKIMAGE:
+            print("The denoise method requires the `scikit-image` module to be installed. You can do so by calling `python3 -m pip install scikit-image` from your command line.")
+            return
+        else:
+            self.clut = denoise_tv_chambolle(self.clut, weight=weight, eps=eps, n_iter_max=n_iter_max, multichannel=True)
+            self.clut = (self._colors*self.clut).astype(self._dtype)
 
     def _interpolate_to_full(self,clut):
+        # TODO: Interpolation is bad!
         # Use the full CLUT after init
         size = clut.shape[0]
         if size < self._colors:
