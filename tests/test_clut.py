@@ -63,7 +63,7 @@ class TestCLUT(unittest.TestCase):
         clut.randomize()
         self.assertEqual(clut.shape, (256,256,256,3))
 
-        clut.gaussianfilter(1.)
+        clut.denoise(eps=.1)
         self.assertEqual(clut.shape, (256,256,256,3))
 
         self.assertEqual(clut.flat(4).shape, (64, 64, 3))
