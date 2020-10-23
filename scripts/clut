@@ -75,13 +75,14 @@ if args.command is None:
 
 
 elif args.command == 'apply':
-    clut = getfilter(args.haldclut)
+    clut = CLUT(args.haldclut)
+    # clut = getfilter(args.haldclut) # Color3DLUT seems to produce slighly different results, maybe look into that later
 
     def do_path(path):
         im = path2im(path, args.scale)
         if im is not None:
             vprint(f"{path} ...")
-            imout = im.filter(clut)
+            imout = Image.fromarray(clut(im))
             name  = os.path.splitext(path)
             name  = f"{name[0]}{args.suffix}{name[1]}"
             imout.save(name)
@@ -140,5 +141,8 @@ elif args.command == 'fit':
     else:
         vprint(f"Fitting based on {len(names)} image pairs ...")
 
-    clut  = clutfit(*names, scale=args.scale, shuffle=not args.noshuffle, sigma=args.sigma, printstats=args.printstats)
-    clut.save(args.out, size=args.size)
+    clut  = clutfit(*names, scale=args.scale, denoise=args.denoise, printstats=args.printstats)
+    if args.lossless:
+        clut.npsave(args.out)
+    else:
+        clut.save(args.out, size=args.size)
