@@ -2,7 +2,7 @@
 This package implements 3d [color lookup tables](https://en.wikipedia.org/wiki/3D_lookup_table)
 (CLUT) for image manipulation and saving/loading from and to the
 [HaldCLUT](http://www.quelsolaar.com/technology/clut.html) format.
-It package was originally created for the purpose of re-creating CLUT
+It was originally created for the purpose of re-creating CLUT
 filters from a set of edited and un-edited images.
 When is this necessary? Usually, if one wanted to pull
 a filter from your favourite app,
