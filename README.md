@@ -158,7 +158,7 @@ We now have a *clutfit.png* in the same directory, which can be applied to all a
 ![im02in](doc/02out.jpg?raw=true) *02out.jpg* | ![im02clut](doc/02in_clut.jpg?raw=true) *02in_clut.jpg*
 
 ## Additional notes
-* When working with large, out-of-camera files, consider using the `clut fit --scale` option to
+* When working with large, consider using the `clut fit --scale` option to significantly
 speed up the fitting process
-* If your images show visible artifact after the application of a HaldCLUT that has been previously generated with `clut fit`, you can try using the denoise option with `clut fit --denoise X`, where *X* is a value between 1e-4 and 1e-2.
+* If your images show visible artifacts after the application of a HaldCLUT that has been previously generated with `clut fit`, you can try using the denoise option with `clut fit --denoise X`, where *X* is a value between 1e-4 and 1e-2. This requires the [scikit-image](https://scikit-image.org/) module.
 * When in trouble, see `clut fit --help`
