@@ -2,10 +2,10 @@
 This package implements 3d [color lookup tables](https://en.wikipedia.org/wiki/3D_lookup_table)
 (CLUT) for image manipulation and saving/loading from and to the
 [HaldCLUT](http://www.quelsolaar.com/technology/clut.html) format.
-
-The package was originally created for the purpose of re-creating CLUT filters from a set of edited and un-edited
-images.
-When is this necessary? Usually, if one wanted to 'rip' a filter from your favourite app,
+It package was originally created for the purpose of re-creating CLUT
+filters from a set of edited and un-edited images.
+When is this necessary? Usually, if one wanted to pull
+a filter from your favourite app,
 all that needs to be done is loading an identity HaldCLUT image and applying the desired filter to it.
 This is not easily possible if the application of a filter happens on a camera instead of an app,
 since the raw image data is often modified directly.
@@ -158,7 +158,7 @@ We now have a *clutfit.png* in the same directory, which can be applied to any i
 ![im02in](doc/02out.jpg?raw=true) *02out.jpg* | ![im02clut](doc/02in_clut.jpg?raw=true) *02in_clut.jpg*
 
 ## Additional notes
-* When working with large, consider using the `clut fit --scale` option to significantly
+* When working with large images, consider using the `clut fit --scale` option to significantly
 speed up the fitting process
 * If your images show visible artifacts after the application of a HaldCLUT that has been previously generated with `clut fit`, you can try using the denoise option with `clut fit --denoise X`, where *X* is a value between 1e-4 and 1e-2. This requires the [scikit-image](https://scikit-image.org/) module
 * When in trouble, see `clut fit --help`
