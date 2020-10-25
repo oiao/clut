@@ -146,7 +146,7 @@ We can use the clut package to generate a fit based on the above images:
 >>> clut fit --from 01in.jpg 02in.jpg --to 01out.jpg 02out.jpg
 Fitting based on 2 image pairs ...
 ```
-We now have a *clutfit.png* in the same directory, which can be applied to all any image:
+We now have a *clutfit.png* in the same directory, which can be applied to any image:
 ```
 >>> clut apply clutfit.png --to 01in.jpg 02in.jpg
 01in.jpg ...
@@ -160,5 +160,5 @@ We now have a *clutfit.png* in the same directory, which can be applied to all a
 ## Additional notes
 * When working with large, consider using the `clut fit --scale` option to significantly
 speed up the fitting process
-* If your images show visible artifacts after the application of a HaldCLUT that has been previously generated with `clut fit`, you can try using the denoise option with `clut fit --denoise X`, where *X* is a value between 1e-4 and 1e-2. This requires the [scikit-image](https://scikit-image.org/) module.
+* If your images show visible artifacts after the application of a HaldCLUT that has been previously generated with `clut fit`, you can try using the denoise option with `clut fit --denoise X`, where *X* is a value between 1e-4 and 1e-2. This requires the [scikit-image](https://scikit-image.org/) module
 * When in trouble, see `clut fit --help`
