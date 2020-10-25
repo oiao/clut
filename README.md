@@ -11,6 +11,7 @@ This is not easily possible if the application of a filter happens on a camera i
 since the raw image data is often modified directly.
 The Ricoh GR for example has a much-loved positive film effect,
 but one could not apply it to arbitrary images on your computer... until now.
+[Scroll down](#application-example) to see an application example.
 
 
 
@@ -135,8 +136,8 @@ doc
 
 | Unedited Image | Edited Image |
 | :-: | :-: |
-![im01in](doc/01in.jpg) *01in.jpg* | ![im01out](doc/01out.jpg) *01out.jpg*
-![im02in](doc/02in.jpg) *02in.jpg* | ![im02out](doc/02out.jpg) *02out.jpg*
+![im01in](doc/01in.jpg?raw=true) *01in.jpg* | ![im01out](doc/01out.jpg?raw=true) *01out.jpg*
+![im02in](doc/02in.jpg?raw=true) *02in.jpg* | ![im02out](doc/02out.jpg?raw=true) *02out.jpg*
 
 however, the HaldCLUT for that color mapping is not available to us.
 We can use the clut package to generate a fit based on the above images:
@@ -145,7 +146,7 @@ We can use the clut package to generate a fit based on the above images:
 >>> clut fit --from 01in.jpg 02in.jpg --to 01out.jpg 02out.jpg
 Fitting based on 2 image pairs ...
 ```
-We now have a *clutfit.png* in the same directory, which can be applied to all images your images:
+We now have a *clutfit.png* in the same directory, which can be applied to all any image:
 ```
 >>> clut apply clutfit.png --to 01in.jpg 02in.jpg
 01in.jpg ...
@@ -153,5 +154,11 @@ We now have a *clutfit.png* in the same directory, which can be applied to all i
 ```
 | Original Edited Image | Reconstructed Filter Image |
 | :-: | :-: |
-![im01in](doc/01out.jpg) *01out.jpg* | ![im01clut](doc/01in_clut.jpg) *01in_clut.jpg*
-![im02in](doc/02out.jpg) *02out.jpg* | ![im02clut](doc/02in_clut.jpg) *02in_clut.jpg*
+![im01in](doc/01out.jpg?raw=true) *01out.jpg* | ![im01clut](doc/01in_clut.jpg?raw=true) *01in_clut.jpg*
+![im02in](doc/02out.jpg?raw=true) *02out.jpg* | ![im02clut](doc/02in_clut.jpg?raw=true) *02in_clut.jpg*
+
+## Additional notes
+* When working with large, out-of-camera files, consider using the `clut fit --scale` option to
+speed up the fitting process
+* If your images show visible artifact after the application of a HaldCLUT that has been previously generated with `clut fit`, you can try using the denoise option with `clut fit --denoise X`, where *X* is a value between 1e-4 and 1e-2.
+* When in trouble, see `clut fit --help`
