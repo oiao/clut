@@ -153,5 +153,5 @@ We now have a *clutfit.png* in the same directory, which can be applied to all i
 ```
 | Original Edited Image | Reconstructed Filter Image |
 | :-: | :-: |
-![im01in](doc/01out.jpg) *01in.jpg* | ![im01clut](doc/01in_clut.jpg) *01in_clut.jpg*
+![im01in](doc/01out.jpg) *01out.jpg* | ![im01clut](doc/01in_clut.jpg) *01in_clut.jpg*
 ![im02in](doc/02out.jpg) *02out.jpg* | ![im02clut](doc/02in_clut.jpg) *02in_clut.jpg*
