@@ -62,8 +62,7 @@ def getfilter(haldpath):
         raise
     size = clut.shape[0]
     if size > 64:
-        vprint('\n\nERROR: Pillow does not support HaldCLUTs that are saved with a size > 8. Please provide a smaller-sized HaldCLUT (use the `size` argument when calling `CLUT.save`).')
-        exit(1)
+        return
     clut = np.swapaxes(clut.clut,0,2)
     clut = clut.reshape(3 * size**3)/255.
     return ImageFilter.Color3DLUT(size, clut)
@@ -76,14 +75,15 @@ if args.command is None:
 
 
 elif args.command == 'apply':
-    clut = CLUT(args.haldclut)
-    # clut = getfilter(args.haldclut) # Color3DLUT seems to produce slighly different results, maybe look into that later
+    clut = getfilter(args.haldclut)
+    if clut is None:
+        clut = CLUT(args.haldclut)
 
     def do_path(path):
         im = path2im(path, args.scale)
         if im is not None:
             vprint(f"{path} ...")
-            imout = Image.fromarray(clut(im))
+            imout = Image.fromarray(clut(im)) if isinstance(clut, CLUT) else im.filter(clut)
             name  = os.path.splitext(path)
             name  = f"{name[0]}{args.suffix}{name[1]}"
             imout.save(name)
@@ -111,6 +111,9 @@ elif args.command == 'batch-apply':
     im = path2im(args.to, args.scale)
     for clutpath in glob(opj(args.clutdir,'*')):
         clut = getfilter(clutpath)
+        if clut is None:
+            vprint('\n\nERROR: Pillow does not support HaldCLUTs that are saved with a size > 8. Please provide a smaller-sized HaldCLUT (use the `size` argument when calling `CLUT.save`).')
+            exit(1)
         imout = im.filter(clut)
         imout.save(opj(args.out, os.path.basename(clutpath)))
 
