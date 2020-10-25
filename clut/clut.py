@@ -123,9 +123,8 @@ class CLUT:
         else:
             assert size >= 2, "Minimum compressed size is 2"
             points = np.linspace(0, self._colors-1, size**2).astype(self._dtype)
-            rgb    = self.clut[points,points,points]
-            b,g,r  = np.meshgrid(rgb[:,0], rgb[:,1], rgb[:,2], indexing='ij')
-            clut   = np.stack([r,g,b]).T
+            r,g,b  = np.meshgrid(*3*[points], indexing='ij')
+            clut   = self[r,g,b]
 
         rs = int(np.sqrt(clut.shape[0])**3)
         if swapaxes:
