@@ -126,7 +126,7 @@ For the fitting to work, the following needs to be considered:
 Lets assume we have the following two image pairs in our folder:
 
 ```
-.
+doc
 ├── 01in.jpg
 ├── 01out.jpg
 ├── 02in.jpg
